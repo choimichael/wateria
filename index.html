@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Water Sales Calculator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+    .container {
+      max-width: 500px;
+      margin: 0 auto;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    .input-group {
+      display: flex;
+      flex-direction: column;
+    }
+    .input-group label {
+      margin-top: 10px;
+    }
+    .input-group button {
+      margin-top: 10px;
+    }
+    @media screen and (max-width: 600px) {
+      .container {
+        padding: 10px;
+      }
+    }
+  </style>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <h1 class="container">Water Sales Calculator</h1>
+
+  <div class="container">
+    <h2>Purified and O2 Water Sales</h2>
+    <div class="input-group">
+      <label for="oxygenEndMeter">End Meter: </label><input id="oxygenEndMeter" type="number">
+      <label for="oxygenStartMeter">Start Meter: </label><input id="oxygenStartMeter" type="number">
+      <label for="purifiedWaterSale">Total Purified Water Sale: </label><input id="purifiedWaterSale" type="number">
+      <label for="o2WaterSale">Total O2 Water Sale: </label><input id="o2WaterSale" type="number">
+      <button onclick="calculateOxygen()">Calculate</button>
+      <button id="resetButtonOxygen" onclick="resetFields()">Reset</button>
+      <p id="oxygenTotalPurifiedMeterReading"></p>
+      <p id="oxygenReportLoss" class="loss"></p>
+    </div>
+  </div>
+
+  <div class="container">
+    <h2>Alkaline Water Sales</h2>
+    <div class="input-group">
+      <label for="alkalineEndMeter">End Meter: </label><input id="alkalineEndMeter" type="number">
+      <label for="alkalineStartMeter">Start Meter: </label><input id="alkalineStartMeter" type="number">
+      <label for="alkalineWaterSale">Total Alkaline Water Sale: </label><input id="alkalineWaterSale" type="number">
+      <button onclick="calculateAlkaline()">Calculate</button>
+      <button id="resetButtonAlkaline" onclick="resetFields()">Reset</button>
+      <p id="alkalineTotalMeterReading"></p>
+      <p id="alkalineReportLoss" class="loss"></p>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+
+</html>
