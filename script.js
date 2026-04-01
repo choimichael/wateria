@@ -10,7 +10,7 @@ function calculateOxygen() {
 
   var totalPurifiedMeterReading = endMeter - startMeter;
   var reportLoss =
-    purifiedWaterSale + o2WaterSale * 0.65 - totalPurifiedMeterReading * 0.65;
+    purifiedWaterSale + o2WaterSale * 0.80 - totalPurifiedMeterReading * 0.80;
 
   var lossString =
     reportLoss < 0 ? reportLoss.toFixed(2) : "+" + reportLoss.toFixed(2);
@@ -31,7 +31,7 @@ function calculateAlkaline() {
   );
 
   var totalAlkalineMeterReading = endMeter - startMeter;
-  var reportLoss = alkalineWaterSale - totalAlkalineMeterReading * 2;
+  var reportLoss = alkalineWaterSale - totalAlkalineMeterReading * 2.5;
 
   var lossString =
     reportLoss < 0 ? reportLoss.toFixed(2) : "+" + reportLoss.toFixed(2);
