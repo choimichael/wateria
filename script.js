@@ -9,8 +9,8 @@ function calculateOxygen() {
   var o2WaterSale = parseFloat(document.getElementById("o2WaterSale").value);
 
   var totalPurifiedMeterReading = endMeter - startMeter;
-  var reportLoss =
-    purifiedWaterSale + o2WaterSale * 0.80 - totalPurifiedMeterReading * 0.80;
+  var reportLoss = 
+    (purifiedWaterSale * 0.80 + o2WaterSale * 1.25) - totalPurifiedMeterReading * 0.80;
 
   var lossString =
     reportLoss < 0 ? reportLoss.toFixed(2) : "+" + reportLoss.toFixed(2);
