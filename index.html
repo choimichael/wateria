@@ -137,6 +137,30 @@
   .toast.error { background: rgba(255,59,92,0.15); border: 1px solid rgba(255,59,92,0.5); color: var(--accent-red); }
   .toast.info { background: rgba(0,200,255,0.15); border: 1px solid rgba(0,200,255,0.5); color: var(--accent-blue); }
 
+  /* THRESHOLD ALERT */
+  .threshold-alert {
+    display: none;
+    margin-top: 10px;
+    padding: 10px 14px;
+    border-radius: 2px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    line-height: 1.7;
+    border: 1px solid;
+  }
+  .threshold-alert.over {
+    background: rgba(255,59,92,0.08);
+    border-color: rgba(255,59,92,0.5);
+    color: var(--accent-red);
+  }
+  .threshold-alert.ok {
+    background: rgba(57,255,20,0.06);
+    border-color: rgba(57,255,20,0.35);
+    color: var(--accent-green);
+  }
+  .threshold-alert.visible { display: block; }
+
   footer { text-align: center; margin-top: 48px; font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text-dim); letter-spacing: 2px; opacity: 0.5; }
 </style>
 </head>
@@ -219,6 +243,7 @@
         <div class="result-final"><span class="result-final-label" id="po_status_label">Loss</span><span class="result-final-value" id="po_loss_gal">—</span></div>
         <div class="result-final" style="margin-top:4px;"><span class="result-final-label" style="color:var(--text-dim);font-size:11px;">Dollar Value</span><span class="result-final-value" style="font-size:15px;" id="po_loss_dollar">—</span></div>
         <div><span class="status-badge" id="po_badge">—</span></div>
+        <div class="threshold-alert" id="po_threshold"></div>
       </div>
     </div>
 
@@ -246,6 +271,7 @@
         <div class="result-final"><span class="result-final-label" id="alk_status_label">Loss</span><span class="result-final-value" id="alk_loss_gal">—</span></div>
         <div class="result-final" style="margin-top:4px;"><span class="result-final-label" style="color:var(--text-dim);font-size:11px;">Dollar Value</span><span class="result-final-value" style="font-size:15px;" id="alk_loss_dollar">—</span></div>
         <div><span class="status-badge" id="alk_badge">—</span></div>
+        <div class="threshold-alert" id="alk_threshold"></div>
       </div>
     </div>
 
@@ -324,11 +350,18 @@
     setTimeout(() => { t.style.display='none'; }, dur);
   }
 
+  // Loss thresholds per section
+  var THRESHOLD = { po: 2.00, alk: 2.50 };
+  // Gallon rates for threshold display
+  var GAL_RATE = { po: 0.80, alk: 2.50 };
+
   function applyLossDisplay(prefix, lossGal, lossDollar) {
     const gEl = document.getElementById(prefix+'_loss_gal');
     const dEl = document.getElementById(prefix+'_loss_dollar');
     const b   = document.getElementById(prefix+'_badge');
     const lbl = document.getElementById(prefix+'_status_label');
+    const tEl = document.getElementById(prefix+'_threshold');
+
     if (lossGal > 0.001) {
       gEl.textContent=fmt(lossGal)+' gal'; gEl.className='result-final-value loss';
       dEl.textContent='-$'+lossDollar.toFixed(2); dEl.style.color='var(--accent-red)';
@@ -341,6 +374,33 @@
       gEl.textContent='0.000 gal'; gEl.className='result-final-value neutral';
       dEl.textContent='$0.00'; dEl.style.color='var(--accent-orange)';
       b.textContent='✓ BALANCED'; b.className='status-badge ok'; lbl.textContent='Diff';
+    }
+
+    // Threshold check
+    var limit    = THRESHOLD[prefix];
+    var rate     = GAL_RATE[prefix];
+    var maxGal   = (limit / rate).toFixed(2);
+    var lostGal  = Math.abs(lossGal).toFixed(2);
+    var overGal  = ((lossDollar - limit) / rate).toFixed(2);
+
+    if (tEl && limit !== undefined) {
+      if (lossDollar > limit) {
+        tEl.className = 'threshold-alert over visible';
+        tEl.innerHTML =
+          '⛔ LOSS EXCEEDS ACCEPTABLE LIMIT<br>' +
+          'Lost: <strong>' + lostGal + ' gal</strong> ($' + lossDollar.toFixed(2) + ')' +
+          ' &nbsp;|&nbsp; Max allowed: <strong>' + maxGal + ' gal</strong> ($' + limit.toFixed(2) + ')<br>' +
+          'Over by: <strong>' + overGal + ' gal</strong> ($' + (lossDollar - limit).toFixed(2) + ') — Please report to your manager.';
+      } else if (lossDollar > 0.001) {
+        tEl.className = 'threshold-alert ok visible';
+        tEl.innerHTML =
+          '✓ WITHIN ACCEPTABLE LOSS<br>' +
+          'Lost: <strong>' + lostGal + ' gal</strong> ($' + lossDollar.toFixed(2) + ')' +
+          ' &nbsp;|&nbsp; Max allowed: <strong>' + maxGal + ' gal</strong> ($' + limit.toFixed(2) + ')';
+      } else {
+        tEl.className = 'threshold-alert';
+        tEl.innerHTML = '';
+      }
     }
   }
 
