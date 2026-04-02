@@ -1,68 +1,488 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-  <title>Water Sales Calculator</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-    }
-    .container {
-      max-width: 500px;
-      margin: 0 auto;
-      padding: 20px;
-      box-sizing: border-box;
-    }
-    .input-group {
-      display: flex;
-      flex-direction: column;
-    }
-    .input-group label {
-      margin-top: 10px;
-    }
-    .input-group button {
-      margin-top: 10px;
-    }
-    @media screen and (max-width: 600px) {
-      .container {
-        padding: 10px;
-      }
-    }
-  </style>
-  <link rel="stylesheet" href="styles.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Water Loss Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e1a; --panel: #0f1628; --border: #1e2d4a;
+    --accent-blue: #00c8ff; --accent-cyan: #00ffcc;
+    --accent-green: #39ff14; --accent-red: #ff3b5c;
+    --accent-orange: #ffaa00; --accent-am: #ffd700; --accent-pm: #a855f7;
+    --text: #c8dff5; --text-dim: #4a6a8a; --text-bright: #e8f4ff;
+    --grid: rgba(0,200,255,0.04);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Rajdhani', sans-serif; font-size: 16px; min-height: 100vh; overflow-x: hidden; }
+  body::before { content: ''; position: fixed; inset: 0; background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px); background-size: 40px 40px; pointer-events: none; z-index: 0; }
+  .container { max-width: 980px; margin: 0 auto; padding: 32px 20px 60px; position: relative; z-index: 1; }
+
+  header { text-align: center; margin-bottom: 36px; }
+  .header-badge { display: inline-block; font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--accent-blue); letter-spacing: 3px; text-transform: uppercase; border: 1px solid var(--accent-blue); padding: 4px 14px; margin-bottom: 16px; opacity: 0.8; }
+  h1 { font-size: clamp(26px, 5vw, 44px); font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--text-bright); line-height: 1.1; }
+  h1 span { color: var(--accent-cyan); }
+  .subtitle { font-family: 'Share Tech Mono', monospace; font-size: 12px; color: var(--text-dim); letter-spacing: 2px; margin-top: 10px; }
+
+
+
+  /* SHIFT PANEL */
+  .shift-panel { background: var(--panel); border: 1px solid var(--border); border-radius: 2px; padding: 20px 24px; margin-bottom: 20px; position: relative; overflow: hidden; }
+  .shift-panel::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--accent-orange), var(--accent-blue)); }
+  .shift-panel-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+  .shift-panel-title { font-size: 13px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--text-dim); }
+  .auto-info-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+  @media (max-width: 600px) { .auto-info-grid { grid-template-columns: 1fr 1fr; } }
+  .info-card { background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 2px; padding: 10px 14px; }
+  .info-card-label { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--text-dim); letter-spacing: 2px; margin-bottom: 5px; }
+  .info-card-value { font-family: 'Share Tech Mono', monospace; font-size: 13px; color: var(--text-bright); letter-spacing: 1px; }
+
+  /* SHIFT SELECTOR */
+  .shift-selector { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .shift-selector-label { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text-dim); letter-spacing: 2px; }
+
+  /* EMPLOYEE INPUT */
+  .employee-row { display: flex; align-items: center; gap: 14px; margin-top: 14px; flex-wrap: wrap; }
+  .employee-row label { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text-dim); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 0; white-space: nowrap; }
+  .employee-input { flex: 1; min-width: 180px; background: rgba(0,0,0,0.4); border: 1px solid var(--border); border-radius: 2px; color: var(--text-bright); font-family: 'Share Tech Mono', monospace; font-size: 14px; padding: 9px 14px; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+  .employee-input:focus { border-color: var(--accent-am); box-shadow: 0 0 0 2px rgba(255,215,0,0.1); }
+  .employee-input::placeholder { color: var(--text-dim); opacity: 0.6; }
+  .shift-btn { padding: 10px 28px; border-radius: 2px; font-family: 'Rajdhani', sans-serif; font-size: 15px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; cursor: pointer; border: 2px solid; transition: all 0.2s; background: transparent; }
+  .shift-btn.am { color: var(--accent-am); border-color: rgba(255,215,0,0.3); }
+  .shift-btn.am.active { background: rgba(255,215,0,0.12); border-color: var(--accent-am); box-shadow: 0 0 16px rgba(255,215,0,0.2); }
+  .shift-btn.pm { color: var(--accent-pm); border-color: rgba(168,85,247,0.3); }
+  .shift-btn.pm.active { background: rgba(168,85,247,0.12); border-color: var(--accent-pm); box-shadow: 0 0 16px rgba(168,85,247,0.2); }
+
+  /* SECTIONS */
+  .sections { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+  @media (max-width: 680px) { .sections { grid-template-columns: 1fr; } }
+  .section { background: var(--panel); border: 1px solid var(--border); border-radius: 2px; padding: 26px 22px; position: relative; overflow: hidden; transition: border-color 0.3s; }
+  .section::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
+  .section.blue::before { background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan)); }
+  .section.green::before { background: linear-gradient(90deg, var(--accent-cyan), var(--accent-green)); }
+  .section:hover { border-color: rgba(0,200,255,0.3); }
+  .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .section-icon { width: 34px; height: 34px; border-radius: 2px; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+  .section.blue .section-icon { background: rgba(0,200,255,0.1); border: 1px solid rgba(0,200,255,0.3); }
+  .section.green .section-icon { background: rgba(0,255,204,0.1); border: 1px solid rgba(0,255,204,0.3); }
+  .section-title { font-size: 14px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--text-bright); }
+  .section-sub { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--text-dim); letter-spacing: 1px; margin-top: 2px; }
+
+  .price-tags { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .price-tag { font-family: 'Share Tech Mono', monospace; font-size: 11px; padding: 3px 9px; border-radius: 2px; border: 1px solid; letter-spacing: 1px; }
+  .price-tag.blue { color: var(--accent-blue); border-color: rgba(0,200,255,0.3); background: rgba(0,200,255,0.05); }
+  .price-tag.cyan { color: var(--accent-cyan); border-color: rgba(0,255,204,0.3); background: rgba(0,255,204,0.05); }
+  .price-tag.orange { color: var(--accent-orange); border-color: rgba(255,170,0,0.3); background: rgba(255,170,0,0.05); }
+
+  .field { margin-bottom: 12px; }
+  label { display: block; font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text-dim); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 5px; }
+  input[type="number"] { width: 100%; background: rgba(0,0,0,0.4); border: 1px solid var(--border); border-radius: 2px; color: var(--text-bright); font-family: 'Share Tech Mono', monospace; font-size: 14px; padding: 9px 12px; outline: none; transition: border-color 0.2s, box-shadow 0.2s; -moz-appearance: textfield; }
+  input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+  input[type="number"]:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 2px rgba(0,200,255,0.1); }
+  .section.green input[type="number"]:focus { border-color: var(--accent-cyan); box-shadow: 0 0 0 2px rgba(0,255,204,0.1); }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .calc-btn { width: 100%; padding: 14px; margin-top: 8px; border: none; border-radius: 2px; font-family: 'Rajdhani', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; cursor: pointer; transition: all 0.2s; }
+  .section.blue .calc-btn { background: linear-gradient(135deg, rgba(0,200,255,0.15), rgba(0,255,204,0.15)); color: var(--accent-cyan); border: 1px solid rgba(0,200,255,0.4); }
+  .section.green .calc-btn { background: linear-gradient(135deg, rgba(0,255,204,0.15), rgba(57,255,20,0.15)); color: var(--accent-green); border: 1px solid rgba(0,255,204,0.4); }
+  .calc-btn:hover { transform: translateY(-1px); filter: brightness(1.3); }
+  .calc-btn:active { transform: translateY(0); }
+
+  .result-panel { margin-top: 16px; padding: 16px; background: rgba(0,0,0,0.4); border: 1px solid var(--border); border-radius: 2px; display: none; animation: fadeIn 0.3s ease; }
+  .result-panel.visible { display: block; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+  .result-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  .result-row:last-child { border-bottom: none; }
+  .result-label { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text-dim); letter-spacing: 1px; }
+  .result-value { font-family: 'Share Tech Mono', monospace; font-size: 13px; font-weight: 600; color: var(--text-bright); }
+  .result-value.loss { color: var(--accent-red); }
+  .result-value.gain { color: var(--accent-green); }
+  .result-divider { height: 1px; background: var(--border); margin: 8px 0; }
+  .result-final { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; }
+  .result-final-label { font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
+  .result-final-value { font-family: 'Share Tech Mono', monospace; font-size: 19px; font-weight: 700; }
+  .status-badge { display: inline-block; font-family: 'Share Tech Mono', monospace; font-size: 10px; padding: 3px 9px; border-radius: 2px; letter-spacing: 2px; text-transform: uppercase; margin-top: 8px; }
+  .status-badge.loss { background: rgba(255,59,92,0.1); border: 1px solid rgba(255,59,92,0.4); color: var(--accent-red); }
+  .status-badge.gain { background: rgba(57,255,20,0.1); border: 1px solid rgba(57,255,20,0.4); color: var(--accent-green); }
+  .status-badge.ok { background: rgba(255,170,0,0.1); border: 1px solid rgba(255,170,0,0.4); color: var(--accent-orange); }
+
+  /* SUMMARY */
+  .summary-panel { background: var(--panel); border: 1px solid var(--border); border-radius: 2px; padding: 26px 22px; position: relative; overflow: hidden; display: none; margin-bottom: 20px; }
+  .summary-panel.visible { display: block; animation: fadeIn 0.4s ease; }
+  .summary-panel::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan), var(--accent-green)); }
+  .summary-title { font-size: 13px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 14px; }
+  .summary-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
+  @media (max-width: 520px) { .summary-grid { grid-template-columns: 1fr; } }
+  .summary-card { background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 2px; padding: 14px; text-align: center; }
+  .summary-card-label { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--text-dim); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; }
+  .summary-card-value { font-family: 'Share Tech Mono', monospace; font-size: 20px; font-weight: 700; }
+  .summary-card-value.loss { color: var(--accent-red); }
+  .summary-card-value.gain { color: var(--accent-green); }
+
+  .shift-badge-display { display: inline-block; font-family: 'Share Tech Mono', monospace; font-size: 12px; padding: 4px 14px; border-radius: 2px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px; }
+  .shift-badge-display.am { background: rgba(255,215,0,0.1); border: 1px solid rgba(255,215,0,0.4); color: var(--accent-am); }
+  .shift-badge-display.pm { background: rgba(168,85,247,0.1); border: 1px solid rgba(168,85,247,0.4); color: var(--accent-pm); }
+
+  .save-drive-btn { width: 100%; padding: 16px; border: none; border-radius: 2px; font-family: 'Rajdhani', sans-serif; font-size: 15px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; cursor: pointer; transition: all 0.2s; background: linear-gradient(135deg, rgba(0,200,255,0.1), rgba(168,85,247,0.1)); color: var(--accent-cyan); border: 1px solid rgba(0,200,255,0.5); margin-top: 16px; display: none; }
+  .save-drive-btn.visible { display: block; }
+  .save-drive-btn:hover { filter: brightness(1.3); transform: translateY(-1px); }
+  .save-drive-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .reset-btn { display: block; margin: 20px auto 0; padding: 10px 32px; background: transparent; border: 1px solid var(--border); border-radius: 2px; color: var(--text-dim); font-family: 'Rajdhani', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; cursor: pointer; transition: all 0.2s; }
+  .reset-btn:hover { border-color: var(--accent-red); color: var(--accent-red); }
+
+  .toast { position: fixed; bottom: 28px; right: 28px; padding: 14px 22px; border-radius: 2px; font-family: 'Share Tech Mono', monospace; font-size: 12px; letter-spacing: 1px; z-index: 999; display: none; }
+  .toast.success { background: rgba(57,255,20,0.15); border: 1px solid rgba(57,255,20,0.5); color: var(--accent-green); }
+  .toast.error { background: rgba(255,59,92,0.15); border: 1px solid rgba(255,59,92,0.5); color: var(--accent-red); }
+  .toast.info { background: rgba(0,200,255,0.15); border: 1px solid rgba(0,200,255,0.5); color: var(--accent-blue); }
+
+  footer { text-align: center; margin-top: 48px; font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text-dim); letter-spacing: 2px; opacity: 0.5; }
+</style>
 </head>
-
 <body>
-  <h1 class="container">Water Sales Calculator</h1>
+<div class="container">
 
-  <div class="container">
-    <h2>Purified and O2 Water Sales</h2>
-    <div class="input-group">
-      <label for="oxygenEndMeter">End Meter: </label><input id="oxygenEndMeter" type="number">
-      <label for="oxygenStartMeter">Start Meter: </label><input id="oxygenStartMeter" type="number">
-      <label for="purifiedWaterSale">Total Purified Water Sale: </label><input id="purifiedWaterSale" type="number">
-      <label for="o2WaterSale">Total O2 Water Sale: </label><input id="o2WaterSale" type="number">
-      <button onclick="calculateOxygen()">Calculate</button>
-      <button id="resetButtonOxygen" onclick="resetFields()">Reset</button>
-      <p id="oxygenTotalPurifiedMeterReading"></p>
-      <p id="oxygenReportLoss" class="loss"></p>
+  <header>
+    <div class="header-badge">Shift Operations Tool</div>
+    <h1>Water Loss <span>Calculator</span></h1>
+    <p class="subtitle">// METER RECONCILIATION · AM/PM SHIFT TRACKER · GOOGLE DRIVE SYNC //</p>
+  </header>
+
+  <!-- Google Drive sync configured -->
+
+  <!-- SHIFT INFO PANEL -->
+  <div class="shift-panel">
+    <div class="shift-panel-header">
+      <span style="font-size:16px;">🗓</span>
+      <div class="shift-panel-title">Shift Information</div>
+      <div style="margin-left:auto;">
+        <span id="live_clock" style="font-family:'Share Tech Mono',monospace;font-size:13px;color:var(--accent-cyan);letter-spacing:2px;"></span>
+      </div>
+    </div>
+    <div class="auto-info-grid">
+      <div class="info-card">
+        <div class="info-card-label">DATE</div>
+        <div class="info-card-value" id="auto_date">—</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-label">TIME OF ENTRY</div>
+        <div class="info-card-value" style="color:var(--accent-orange);" id="auto_time">—</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-label">DAY</div>
+        <div class="info-card-value" style="color:var(--accent-cyan);" id="auto_day">—</div>
+      </div>
+    </div>
+    <div class="shift-selector">
+      <span class="shift-selector-label">Select Shift:</span>
+      <button class="shift-btn am" id="btn_am" onclick="selectShift('AM')">☀ AM</button>
+      <button class="shift-btn pm" id="btn_pm" onclick="selectShift('PM')">🌙 PM</button>
+      <span id="shift_selected_label" style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:1px;margin-left:8px;"></span>
+    </div>
+    <div class="employee-row">
+      <label for="employee_name">👤 Employee</label>
+      <input type="text" id="employee_name" class="employee-input" placeholder="Enter your name" autocomplete="name">
     </div>
   </div>
 
-  <div class="container">
-    <h2>Alkaline Water Sales</h2>
-    <div class="input-group">
-      <label for="alkalineEndMeter">End Meter: </label><input id="alkalineEndMeter" type="number">
-      <label for="alkalineStartMeter">Start Meter: </label><input id="alkalineStartMeter" type="number">
-      <label for="alkalineWaterSale">Total Alkaline Water Sale: </label><input id="alkalineWaterSale" type="number">
-      <button onclick="calculateAlkaline()">Calculate</button>
-      <button id="resetButtonAlkaline" onclick="resetFields()">Reset</button>
-      <p id="alkalineTotalMeterReading"></p>
-      <p id="alkalineReportLoss" class="loss"></p>
+  <!-- CALCULATOR SECTIONS -->
+  <div class="sections">
+
+    <div class="section blue">
+      <div class="section-header">
+        <div class="section-icon">💧</div>
+        <div>
+          <div class="section-title">Purified &amp; Oxygen</div>
+          <div class="section-sub">// SHARED METER //</div>
+        </div>
+      </div>
+      <div class="price-tags">
+        <span class="price-tag blue">PURIFIED $0.80/gal</span>
+        <span class="price-tag cyan">OXYGEN $1.25/gal</span>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Starting Meter</label><input type="number" id="po_start" placeholder="e.g. 6495871.2" step="0.1"></div>
+        <div class="field"><label>Ending Meter</label><input type="number" id="po_end" placeholder="e.g. 6496473.0" step="0.1"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Purified Sales ($)</label><input type="number" id="po_water_sales" placeholder="e.g. 420.00" step="0.01"></div>
+        <div class="field"><label>Oxygen Sales ($)</label><input type="number" id="po_oxy_sales" placeholder="e.g. 87.50" step="0.01"></div>
+      </div>
+      <button class="calc-btn" onclick="calcPurifiedOxygen()">▶ Calculate Loss</button>
+      <div class="result-panel" id="po_result">
+        <div class="result-row"><span class="result-label">Meter Used (gal)</span><span class="result-value" id="po_meter_diff">—</span></div>
+        <div class="result-row"><span class="result-label">Purified Sold (gal)</span><span class="result-value" id="po_water_gal">—</span></div>
+        <div class="result-row"><span class="result-label">Oxygen Sold (gal)</span><span class="result-value" id="po_oxy_gal">—</span></div>
+        <div class="result-row"><span class="result-label">Total Sold (gal)</span><span class="result-value" id="po_total_sold">—</span></div>
+        <div class="result-divider"></div>
+        <div class="result-final"><span class="result-final-label" id="po_status_label">Loss</span><span class="result-final-value" id="po_loss_gal">—</span></div>
+        <div class="result-final" style="margin-top:4px;"><span class="result-final-label" style="color:var(--text-dim);font-size:11px;">Dollar Value</span><span class="result-final-value" style="font-size:15px;" id="po_loss_dollar">—</span></div>
+        <div><span class="status-badge" id="po_badge">—</span></div>
+      </div>
     </div>
+
+    <div class="section green">
+      <div class="section-header">
+        <div class="section-icon">🌿</div>
+        <div>
+          <div class="section-title">Alkaline Water</div>
+          <div class="section-sub">// SEPARATE METER //</div>
+        </div>
+      </div>
+      <div class="price-tags">
+        <span class="price-tag orange">ALKALINE $2.50/gal</span>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Starting Meter</label><input type="number" id="alk_start" placeholder="e.g. 293295.54" step="0.01"></div>
+        <div class="field"><label>Ending Meter</label><input type="number" id="alk_end" placeholder="e.g. 293362.17" step="0.01"></div>
+      </div>
+      <div class="field"><label>Alkaline Sales ($)</label><input type="number" id="alk_sales" placeholder="e.g. 166.88" step="0.01"></div>
+      <button class="calc-btn" onclick="calcAlkaline()">▶ Calculate Loss</button>
+      <div class="result-panel" id="alk_result">
+        <div class="result-row"><span class="result-label">Meter Used (gal)</span><span class="result-value" id="alk_meter_diff">—</span></div>
+        <div class="result-row"><span class="result-label">Alkaline Sold (gal)</span><span class="result-value" id="alk_sold_gal">—</span></div>
+        <div class="result-divider"></div>
+        <div class="result-final"><span class="result-final-label" id="alk_status_label">Loss</span><span class="result-final-value" id="alk_loss_gal">—</span></div>
+        <div class="result-final" style="margin-top:4px;"><span class="result-final-label" style="color:var(--text-dim);font-size:11px;">Dollar Value</span><span class="result-final-value" style="font-size:15px;" id="alk_loss_dollar">—</span></div>
+        <div><span class="status-badge" id="alk_badge">—</span></div>
+      </div>
+    </div>
+
   </div>
 
-  <script src="script.js"></script>
+  <!-- SUMMARY + SAVE -->
+  <div class="summary-panel" id="summary">
+    <div class="summary-title">⬡ Combined Shift Summary</div>
+    <div id="summary_shift_badge"></div>
+    <div id="summary_shift_info" style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--accent-cyan);letter-spacing:1px;margin-bottom:16px;padding:10px 14px;background:rgba(0,200,255,0.05);border:1px solid rgba(0,200,255,0.15);border-radius:2px;display:none;"></div>
+    <div class="summary-grid">
+      <div class="summary-card">
+        <div class="summary-card-label">Purified/O₂ Loss</div>
+        <div class="summary-card-value loss" id="sum_po">—</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);margin-top:4px;" id="sum_po_gal">—</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-card-label">Alkaline Loss</div>
+        <div class="summary-card-value loss" id="sum_alk">—</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);margin-top:4px;" id="sum_alk_gal">—</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-card-label">Total Loss</div>
+        <div class="summary-card-value loss" id="sum_total">—</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-dim);margin-top:4px;">combined</div>
+      </div>
+    </div>
+    <button class="save-drive-btn" id="save_drive_btn" onclick="saveToGoogleDrive()">☁ Save Shift</button>
+    <button class="reset-btn" onclick="resetAll()">✕ Reset All</button>
+  </div>
+
+  <footer>WATER LOSS CALCULATOR v2.0 &nbsp;|&nbsp; AM/PM SHIFT TRACKER &nbsp;|&nbsp; GOOGLE DRIVE SYNC</footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  let poResult = null, alkResult = null, entryTimestamp = null, currentShift = null;
+
+  function formatTime12(d) {
+    let h = d.getHours(); const m = String(d.getMinutes()).padStart(2,'0'), s = String(d.getSeconds()).padStart(2,'0'), ap = h>=12?'PM':'AM'; h=h%12||12; return h+':'+m+':'+s+' '+ap;
+  }
+  function formatDate(d)      { return d.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}).toUpperCase(); }
+  function formatDateShort(d) { return d.toLocaleDateString('en-US',{month:'2-digit',day:'2-digit',year:'numeric'}); }
+  function formatDay(d)       { return d.toLocaleDateString('en-US',{weekday:'long'}).toUpperCase(); }
+  function fmt(n,dec=3)       { return n.toFixed(dec); }
+
+  function captureEntryTime() {
+    entryTimestamp = new Date();
+    var dateEl = document.getElementById('auto_date');
+    var timeEl = document.getElementById('auto_time');
+    var dayEl  = document.getElementById('auto_day');
+    if (dateEl) dateEl.textContent = formatDate(entryTimestamp);
+    if (timeEl) timeEl.textContent = formatTime12(entryTimestamp);
+    if (dayEl)  dayEl.textContent  = formatDay(entryTimestamp);
+  }
+
+  function startLiveClock() {
+    function tick() { document.getElementById('live_clock').textContent = formatTime12(new Date()); }
+    tick(); setInterval(tick, 1000);
+  }
+
+  function selectShift(s) {
+    currentShift = s;
+    document.getElementById('btn_am').classList.toggle('active', s==='AM');
+    document.getElementById('btn_pm').classList.toggle('active', s==='PM');
+    const lbl = document.getElementById('shift_selected_label');
+    lbl.textContent = '// '+s+' SHIFT SELECTED';
+    lbl.style.color = s==='AM' ? 'var(--accent-am)' : 'var(--accent-pm)';
+    updateSummary();
+  }
+
+  function showToast(msg, type='info', dur=3500) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.className = 'toast '+type; t.style.display = 'block';
+    setTimeout(() => { t.style.display='none'; }, dur);
+  }
+
+  function applyLossDisplay(prefix, lossGal, lossDollar) {
+    const gEl = document.getElementById(prefix+'_loss_gal');
+    const dEl = document.getElementById(prefix+'_loss_dollar');
+    const b   = document.getElementById(prefix+'_badge');
+    const lbl = document.getElementById(prefix+'_status_label');
+    if (lossGal > 0.001) {
+      gEl.textContent=fmt(lossGal)+' gal'; gEl.className='result-final-value loss';
+      dEl.textContent='-$'+lossDollar.toFixed(2); dEl.style.color='var(--accent-red)';
+      b.textContent='⚠ LOSS DETECTED'; b.className='status-badge loss'; lbl.textContent='Loss';
+    } else if (lossGal < -0.001) {
+      gEl.textContent='+'+fmt(Math.abs(lossGal))+' gal'; gEl.className='result-final-value gain';
+      dEl.textContent='+$'+Math.abs(lossDollar).toFixed(2); dEl.style.color='var(--accent-green)';
+      b.textContent='↑ SALES OVER METER'; b.className='status-badge gain'; lbl.textContent='Over';
+    } else {
+      gEl.textContent='0.000 gal'; gEl.className='result-final-value neutral';
+      dEl.textContent='$0.00'; dEl.style.color='var(--accent-orange)';
+      b.textContent='✓ BALANCED'; b.className='status-badge ok'; lbl.textContent='Diff';
+    }
+  }
+
+  function calcPurifiedOxygen() {
+    const s=parseFloat(document.getElementById('po_start').value),
+          e=parseFloat(document.getElementById('po_end').value),
+          ws=parseFloat(document.getElementById('po_water_sales').value),
+          os=parseFloat(document.getElementById('po_oxy_sales').value);
+    if ([s,e,ws,os].some(isNaN)) { alert('Please fill in all Purified/Oxygen fields.'); return; }
+    const md=e-s, wg=ws/0.80, og=os/1.25, ts=wg+og, lg=md-ts, ld=lg*0.80;
+    poResult={poStart:s,poEnd:e,meterDiff:md,waterSales:ws,oxySales:os,waterGal:wg,oxyGal:og,totalSold:ts,lossGal:lg,lossDollar:ld};
+    document.getElementById('po_meter_diff').textContent=fmt(md)+' gal';
+    document.getElementById('po_water_gal').textContent=fmt(wg)+' gal';
+    document.getElementById('po_oxy_gal').textContent=fmt(og)+' gal';
+    document.getElementById('po_total_sold').textContent=fmt(ts)+' gal';
+    applyLossDisplay('po',lg,ld);
+    document.getElementById('po_result').classList.add('visible');
+    updateSummary();
+  }
+
+  function calcAlkaline() {
+    const s=parseFloat(document.getElementById('alk_start').value),
+          e=parseFloat(document.getElementById('alk_end').value),
+          sales=parseFloat(document.getElementById('alk_sales').value);
+    if ([s,e,sales].some(isNaN)) { alert('Please fill in all Alkaline fields.'); return; }
+    const md=e-s, sg=sales/2.50, lg=md-sg, ld=lg*2.50;
+    alkResult={alkStart:s,alkEnd:e,meterDiff:md,alkSales:sales,soldGal:sg,lossGal:lg,lossDollar:ld};
+    document.getElementById('alk_meter_diff').textContent=fmt(md)+' gal';
+    document.getElementById('alk_sold_gal').textContent=fmt(sg)+' gal';
+    applyLossDisplay('alk',lg,ld);
+    document.getElementById('alk_result').classList.add('visible');
+    updateSummary();
+  }
+
+  function updateSummary() {
+    if (!poResult && !alkResult) return;
+    document.getElementById('summary').classList.add('visible');
+    const badgeEl = document.getElementById('summary_shift_badge');
+    if (currentShift) badgeEl.innerHTML=`<span class="shift-badge-display ${currentShift.toLowerCase()}">${currentShift==='AM'?'☀':'🌙'} ${currentShift} SHIFT</span>`;
+    const infoEl = document.getElementById('summary_shift_info');
+    if (entryTimestamp) {
+      var empEl = document.getElementById('employee_name');
+      var empName = empEl ? empEl.value.trim() : '';
+      var empPart = empName ? '&nbsp;&nbsp;·&nbsp;&nbsp;👤 ' + empName.toUpperCase() : '';
+      infoEl.innerHTML='📅 '+formatDay(entryTimestamp)+', '+formatDate(entryTimestamp)+'&nbsp;&nbsp;·&nbsp;&nbsp;⏱ ENTRY: '+formatTime12(entryTimestamp)+empPart;
+      infoEl.style.display='block';
+    }
+    if (poResult) {
+      const v=poResult.lossDollar, el=document.getElementById('sum_po');
+      el.textContent=(v>0?'-':'+')+' $'+Math.abs(v).toFixed(2); el.className='summary-card-value '+(v>0?'loss':'gain');
+      document.getElementById('sum_po_gal').textContent=Math.abs(poResult.lossGal).toFixed(3)+' gal';
+    }
+    if (alkResult) {
+      const v=alkResult.lossDollar, el=document.getElementById('sum_alk');
+      el.textContent=(v>0?'-':'+')+' $'+Math.abs(v).toFixed(2); el.className='summary-card-value '+(v>0?'loss':'gain');
+      document.getElementById('sum_alk_gal').textContent=Math.abs(alkResult.lossGal).toFixed(3)+' gal';
+    }
+    if (poResult && alkResult) {
+      const total=(poResult.lossDollar||0)+(alkResult.lossDollar||0), el=document.getElementById('sum_total');
+      el.textContent=(total>0?'-':'+')+' $'+Math.abs(total).toFixed(2); el.className='summary-card-value '+(total>0.01?'loss':'gain');
+      document.getElementById('save_drive_btn').classList.add('visible');
+    }
+  }
+
+  function saveToGoogleDrive() {
+    var baseUrl = 'https://script.google.com/macros/s/AKfycbzkKRhfEdwWBjkB682QIXkwKHWGNHsOWjbex0JrchS9zGTic_ZMlLP7GSeF2YxUx-6T/exec';
+    if (!currentShift) { showToast('Please select AM or PM shift before saving.', 'error', 3500); return; }
+    if (!poResult || !alkResult) { showToast('Calculate both sections first.', 'error', 3000); return; }
+
+    var btn = document.getElementById('save_drive_btn');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+
+    var empName = document.getElementById('employee_name').value.trim() || 'Unknown';
+    var total = (poResult.lossDollar || 0) + (alkResult.lossDollar || 0);
+
+    var params = new URLSearchParams({
+      date:            formatDateShort(entryTimestamp),
+      day:             formatDay(entryTimestamp),
+      entryTime:       formatTime12(entryTimestamp),
+      shift:           currentShift,
+      employee:        empName,
+      poStartMeter:    poResult.poStart,
+      poEndMeter:      poResult.poEnd,
+      poMeterUsed:     poResult.meterDiff.toFixed(3),
+      purifiedSales:   poResult.waterSales,
+      oxygenSales:     poResult.oxySales,
+      purifiedGal:     poResult.waterGal.toFixed(3),
+      oxygenGal:       poResult.oxyGal.toFixed(3),
+      poTotalSold:     poResult.totalSold.toFixed(3),
+      poLossGal:       poResult.lossGal.toFixed(3),
+      poLossDollar:    poResult.lossDollar.toFixed(2),
+      alkStartMeter:   alkResult.alkStart,
+      alkEndMeter:     alkResult.alkEnd,
+      alkMeterUsed:    alkResult.meterDiff.toFixed(3),
+      alkalineSales:   alkResult.alkSales,
+      alkSoldGal:      alkResult.soldGal.toFixed(3),
+      alkLossGal:      alkResult.lossGal.toFixed(3),
+      alkLossDollar:   alkResult.lossDollar.toFixed(2),
+      totalLossDollar: total.toFixed(2)
+    });
+
+    var fullUrl = baseUrl + '?' + params.toString();
+
+    // Open in a new tab — employee sees "Saved!" then closes it
+    window.open(fullUrl, '_blank');
+
+    // Show Saved on the button after a short delay
+    setTimeout(function() {
+      btn.textContent = 'Saved';
+      btn.style.background = 'linear-gradient(135deg, rgba(57,255,20,0.15), rgba(0,255,204,0.15))';
+      btn.style.borderColor = 'rgba(57,255,20,0.5)';
+      btn.style.color = 'var(--accent-green)';
+      showToast('Shift saved! You can close the new tab.', 'success', 4000);
+    }, 2000);
+
+    // Reset button after 7 seconds
+    setTimeout(function() {
+      btn.textContent = 'Save Shift';
+      btn.style.background = '';
+      btn.style.borderColor = '';
+      btn.style.color = '';
+      btn.disabled = false;
+    }, 7000);
+  }
+
+  function resetAll() {
+    ['po_start','po_end','po_water_sales','po_oxy_sales','alk_start','alk_end','alk_sales'].forEach(id=>document.getElementById(id).value='');
+    ['po_result','alk_result','summary'].forEach(id=>document.getElementById(id).classList.remove('visible'));
+    document.getElementById('save_drive_btn').classList.remove('visible');
+    document.getElementById('summary_shift_badge').innerHTML='';
+    document.getElementById('btn_am').classList.remove('active');
+    document.getElementById('btn_pm').classList.remove('active');
+    document.getElementById('shift_selected_label').textContent='';
+    poResult=null; alkResult=null; currentShift=null;
+    captureEntryTime();
+  }
+
+  window.addEventListener('DOMContentLoaded', function() {
+    try { captureEntryTime(); } catch(e) { console.error('captureEntryTime error:', e); }
+    try { startLiveClock(); } catch(e) { console.error('startLiveClock error:', e); }
+  });
+</script>
 </body>
-
 </html>
