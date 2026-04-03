@@ -25,8 +25,6 @@
   h1 span { color: var(--accent-cyan); }
   .subtitle { font-family: 'Share Tech Mono', monospace; font-size: 12px; color: var(--text-dim); letter-spacing: 2px; margin-top: 10px; }
 
-
-
   /* SHIFT PANEL */
   .shift-panel { background: var(--panel); border: 1px solid var(--border); border-radius: 2px; padding: 20px 24px; margin-bottom: 20px; position: relative; overflow: hidden; }
   .shift-panel::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--accent-orange), var(--accent-blue)); }
@@ -107,6 +105,30 @@
   .status-badge.gain { background: rgba(57,255,20,0.1); border: 1px solid rgba(57,255,20,0.4); color: var(--accent-green); }
   .status-badge.ok { background: rgba(255,170,0,0.1); border: 1px solid rgba(255,170,0,0.4); color: var(--accent-orange); }
 
+  /* THRESHOLD ALERT */
+  .threshold-alert {
+    display: none;
+    margin-top: 10px;
+    padding: 10px 14px;
+    border-radius: 2px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    line-height: 1.7;
+    border: 1px solid;
+  }
+  .threshold-alert.over {
+    background: rgba(255,59,92,0.08);
+    border-color: rgba(255,59,92,0.5);
+    color: var(--accent-red);
+  }
+  .threshold-alert.ok {
+    background: rgba(57,255,20,0.06);
+    border-color: rgba(57,255,20,0.35);
+    color: var(--accent-green);
+  }
+  .threshold-alert.visible { display: block; }
+
   /* SUMMARY */
   .summary-panel { background: var(--panel); border: 1px solid var(--border); border-radius: 2px; padding: 26px 22px; position: relative; overflow: hidden; display: none; margin-bottom: 20px; }
   .summary-panel.visible { display: block; animation: fadeIn 0.4s ease; }
@@ -137,30 +159,6 @@
   .toast.error { background: rgba(255,59,92,0.15); border: 1px solid rgba(255,59,92,0.5); color: var(--accent-red); }
   .toast.info { background: rgba(0,200,255,0.15); border: 1px solid rgba(0,200,255,0.5); color: var(--accent-blue); }
 
-  /* THRESHOLD ALERT */
-  .threshold-alert {
-    display: none;
-    margin-top: 10px;
-    padding: 10px 14px;
-    border-radius: 2px;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 1px;
-    line-height: 1.7;
-    border: 1px solid;
-  }
-  .threshold-alert.over {
-    background: rgba(255,59,92,0.08);
-    border-color: rgba(255,59,92,0.5);
-    color: var(--accent-red);
-  }
-  .threshold-alert.ok {
-    background: rgba(57,255,20,0.06);
-    border-color: rgba(57,255,20,0.35);
-    color: var(--accent-green);
-  }
-  .threshold-alert.visible { display: block; }
-
   footer { text-align: center; margin-top: 48px; font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text-dim); letter-spacing: 2px; opacity: 0.5; }
 </style>
 </head>
@@ -172,8 +170,6 @@
     <h1>Water Loss <span>Calculator</span></h1>
     <p class="subtitle">// METER RECONCILIATION · AM/PM SHIFT TRACKER · GOOGLE DRIVE SYNC //</p>
   </header>
-
-  <!-- Google Drive sync configured -->
 
   <!-- SHIFT INFO PANEL -->
   <div class="shift-panel">
@@ -350,10 +346,8 @@
     setTimeout(() => { t.style.display='none'; }, dur);
   }
 
-  // Loss thresholds per section
   var THRESHOLD = { po: 2.00, alk: 2.50 };
-  // Gallon rates for threshold display
-  var GAL_RATE = { po: 0.80, alk: 2.50 };
+  var GAL_RATE   = { po: 0.80, alk: 2.50 };
 
   function applyLossDisplay(prefix, lossGal, lossDollar) {
     const gEl = document.getElementById(prefix+'_loss_gal');
@@ -376,12 +370,11 @@
       b.textContent='✓ BALANCED'; b.className='status-badge ok'; lbl.textContent='Diff';
     }
 
-    // Threshold check
-    var limit    = THRESHOLD[prefix];
-    var rate     = GAL_RATE[prefix];
-    var maxGal   = (limit / rate).toFixed(2);
-    var lostGal  = Math.abs(lossGal).toFixed(2);
-    var overGal  = ((lossDollar - limit) / rate).toFixed(2);
+    var limit   = THRESHOLD[prefix];
+    var rate    = GAL_RATE[prefix];
+    var maxGal  = (limit / rate).toFixed(2);
+    var lostGal = Math.abs(lossGal).toFixed(2);
+    var overGal = ((lossDollar - limit) / rate).toFixed(2);
 
     if (tEl && limit !== undefined) {
       if (lossDollar > limit) {
@@ -467,15 +460,17 @@
 
   function saveToGoogleDrive() {
     var baseUrl = 'https://script.google.com/macros/s/AKfycbzkKRhfEdwWBjkB682QIXkwKHWGNHsOWjbex0JrchS9zGTic_ZMlLP7GSeF2YxUx-6T/exec';
+
     if (!currentShift) { showToast('Please select AM or PM shift before saving.', 'error', 3500); return; }
     if (!poResult || !alkResult) { showToast('Calculate both sections first.', 'error', 3000); return; }
 
     var btn = document.getElementById('save_drive_btn');
     btn.disabled = true;
-    btn.textContent = 'Saving...';
+    btn.textContent = '⏳ Saving...';
+    showToast('Sending to Google Drive...', 'info', 4000);
 
     var empName = document.getElementById('employee_name').value.trim() || 'Unknown';
-    var total = (poResult.lossDollar || 0) + (alkResult.lossDollar || 0);
+    var total   = (poResult.lossDollar || 0) + (alkResult.lossDollar || 0);
 
     var params = new URLSearchParams({
       date:            formatDateShort(entryTimestamp),
@@ -505,26 +500,35 @@
 
     var fullUrl = baseUrl + '?' + params.toString();
 
-    // Open in a new tab — employee sees "Saved!" then closes it
-    window.open(fullUrl, '_blank');
+    // Use fetch with no-cors — works cross-origin with Google Apps Script
+    fetch(fullUrl, { method: 'GET', mode: 'no-cors' })
+      .then(function() {
+        // no-cors responses are "opaque" — we can't read the body,
+        // but if we got here the request was delivered successfully.
+        btn.textContent = '✓ Saved to Drive';
+        btn.style.background   = 'linear-gradient(135deg, rgba(57,255,20,0.15), rgba(0,255,204,0.15))';
+        btn.style.borderColor  = 'rgba(57,255,20,0.5)';
+        btn.style.color        = 'var(--accent-green)';
+        showToast('✓ Shift saved to Google Drive!', 'success', 4500);
 
-    // Show Saved on the button after a short delay
-    setTimeout(function() {
-      btn.textContent = 'Saved';
-      btn.style.background = 'linear-gradient(135deg, rgba(57,255,20,0.15), rgba(0,255,204,0.15))';
-      btn.style.borderColor = 'rgba(57,255,20,0.5)';
-      btn.style.color = 'var(--accent-green)';
-      showToast('Shift saved! You can close the new tab.', 'success', 4000);
-    }, 2000);
-
-    // Reset button after 7 seconds
-    setTimeout(function() {
-      btn.textContent = 'Save Shift';
-      btn.style.background = '';
-      btn.style.borderColor = '';
-      btn.style.color = '';
-      btn.disabled = false;
-    }, 7000);
+        // Re-enable after 8 s so they can re-save if needed
+        setTimeout(function() {
+          btn.textContent      = '☁ Save Shift';
+          btn.style.background = '';
+          btn.style.borderColor = '';
+          btn.style.color      = '';
+          btn.disabled         = false;
+        }, 8000);
+      })
+      .catch(function(err) {
+        console.error('Save error:', err);
+        btn.textContent = '☁ Save Shift';
+        btn.style.background = '';
+        btn.style.borderColor = '';
+        btn.style.color      = '';
+        btn.disabled         = false;
+        showToast('❌ Save failed — check your connection.', 'error', 5000);
+      });
   }
 
   function resetAll() {
@@ -541,7 +545,7 @@
 
   window.addEventListener('DOMContentLoaded', function() {
     try { captureEntryTime(); } catch(e) { console.error('captureEntryTime error:', e); }
-    try { startLiveClock(); } catch(e) { console.error('startLiveClock error:', e); }
+    try { startLiveClock();   } catch(e) { console.error('startLiveClock error:', e); }
   });
 </script>
 </body>
