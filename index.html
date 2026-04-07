@@ -402,7 +402,12 @@
           e=parseFloat(document.getElementById('po_end').value),
           ws=parseFloat(document.getElementById('po_water_sales').value),
           os=parseFloat(document.getElementById('po_oxy_sales').value);
-    if ([s,e,ws,os].some(isNaN)) { alert('Please fill in all Purified/Oxygen fields.'); return; }
+    var missing = [];
+    if (isNaN(s) || s === '') missing.push('Starting Meter');
+    if (isNaN(e) || e === '') missing.push('Ending Meter');
+    if (isNaN(ws) || ws === '') missing.push('Purified Sales ($)');
+    if (isNaN(os) || os === '') missing.push('Oxygen Sales ($)');
+    if (missing.length) { alert('⚠ Please fill in the following fields:\n\n• ' + missing.join('\n• ')); return; }
     const md=e-s, wg=ws/0.80, og=os/1.25, ts=wg+og, lg=md-ts, ld=lg*0.80;
     poResult={poStart:s,poEnd:e,meterDiff:md,waterSales:ws,oxySales:os,waterGal:wg,oxyGal:og,totalSold:ts,lossGal:lg,lossDollar:ld};
     document.getElementById('po_meter_diff').textContent=fmt(md)+' gal';
@@ -418,7 +423,11 @@
     const s=parseFloat(document.getElementById('alk_start').value),
           e=parseFloat(document.getElementById('alk_end').value),
           sales=parseFloat(document.getElementById('alk_sales').value);
-    if ([s,e,sales].some(isNaN)) { alert('Please fill in all Alkaline fields.'); return; }
+    var missing = [];
+    if (isNaN(s) || s === '') missing.push('Starting Meter');
+    if (isNaN(e) || e === '') missing.push('Ending Meter');
+    if (isNaN(sales) || sales === '') missing.push('Alkaline Sales ($)');
+    if (missing.length) { alert('⚠ Please fill in the following fields:\n\n• ' + missing.join('\n• ')); return; }
     const md=e-s, sg=sales/2.50, lg=md-sg, ld=lg*2.50;
     alkResult={alkStart:s,alkEnd:e,meterDiff:md,alkSales:sales,soldGal:sg,lossGal:lg,lossDollar:ld};
     document.getElementById('alk_meter_diff').textContent=fmt(md)+' gal';
@@ -461,8 +470,15 @@
   function saveToGoogleDrive() {
     var baseUrl = 'https://script.google.com/macros/s/AKfycbzrk_eMw_O0yGRSb151DPpYxTdDGUryE6CbcAU8oiZj55xRHyNFUy8qyN6tgUSoGKzg/exec';
 
-    if (!currentShift) { showToast('Please select AM or PM shift before saving.', 'error', 3500); return; }
-    if (!poResult || !alkResult) { showToast('Calculate both sections first.', 'error', 3000); return; }
+    var saveErrors = [];
+    if (!currentShift) saveErrors.push('Select AM or PM shift');
+    if (!document.getElementById('employee_name').value.trim()) saveErrors.push('Enter employee name');
+    if (!poResult) saveErrors.push('Calculate Purified & Oxygen section');
+    if (!alkResult) saveErrors.push('Calculate Alkaline section');
+    if (saveErrors.length) {
+      alert('⚠ Please complete the following before saving:\n\n• ' + saveErrors.join('\n• '));
+      return;
+    }
 
     var btn = document.getElementById('save_drive_btn');
     btn.disabled = true;
@@ -542,17 +558,6 @@
   window.addEventListener('DOMContentLoaded', function() {
     try { captureEntryTime(); } catch(e) { console.error('captureEntryTime error:', e); }
     try { startLiveClock();   } catch(e) { console.error('startLiveClock error:', e); }
-
-    // Pre-fill test numbers
-    document.getElementById('po_start').value       = '6495871.0';
-    document.getElementById('po_end').value         = '6496473.0';
-    document.getElementById('po_water_sales').value = '420.00';
-    document.getElementById('po_oxy_sales').value   = '87.50';
-    document.getElementById('alk_start').value      = '293295.54';
-    document.getElementById('alk_end').value        = '293362.17';
-    document.getElementById('alk_sales').value      = '166.88';
-    selectShift('AM');
-    document.getElementById('employee_name').value  = 'Test User';
   });
 </script>
 </body>
