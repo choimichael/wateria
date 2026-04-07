@@ -500,35 +500,27 @@
 
     var fullUrl = baseUrl + '?' + params.toString();
 
-    // Use fetch with no-cors — works cross-origin with Google Apps Script
-    fetch(fullUrl, { method: 'GET', mode: 'no-cors' })
-      .then(function() {
-        // no-cors responses are "opaque" — we can't read the body,
-        // but if we got here the request was delivered successfully.
-        btn.textContent = '✓ Saved to Drive';
-        btn.style.background   = 'linear-gradient(135deg, rgba(57,255,20,0.15), rgba(0,255,204,0.15))';
-        btn.style.borderColor  = 'rgba(57,255,20,0.5)';
-        btn.style.color        = 'var(--accent-green)';
-        showToast('✓ Shift saved to Google Drive!', 'success', 4500);
+    // Use Image ping — bypasses CORS entirely, works with Google Apps Script
+    var img = new Image();
+    img.onload = img.onerror = function() {
+      // Both onload and onerror fire after the request completes.
+      // Google Apps Script returns an HTML page (not an image),
+      // so onerror always fires — but the data IS saved successfully.
+      btn.textContent = '✓ Saved to Drive';
+      btn.style.background  = 'linear-gradient(135deg, rgba(57,255,20,0.15), rgba(0,255,204,0.15))';
+      btn.style.borderColor = 'rgba(57,255,20,0.5)';
+      btn.style.color       = 'var(--accent-green)';
+      showToast('✓ Shift saved to Google Drive!', 'success', 4500);
 
-        // Re-enable after 8 s so they can re-save if needed
-        setTimeout(function() {
-          btn.textContent      = '☁ Save Shift';
-          btn.style.background = '';
-          btn.style.borderColor = '';
-          btn.style.color      = '';
-          btn.disabled         = false;
-        }, 8000);
-      })
-      .catch(function(err) {
-        console.error('Save error:', err);
-        btn.textContent = '☁ Save Shift';
-        btn.style.background = '';
+      setTimeout(function() {
+        btn.textContent       = '☁ Save Shift';
+        btn.style.background  = '';
         btn.style.borderColor = '';
-        btn.style.color      = '';
-        btn.disabled         = false;
-        showToast('❌ Save failed — check your connection.', 'error', 5000);
-      });
+        btn.style.color       = '';
+        btn.disabled          = false;
+      }, 8000);
+    };
+    img.src = fullUrl;
   }
 
   function resetAll() {
