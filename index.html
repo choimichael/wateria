@@ -459,7 +459,7 @@
   }
 
   function saveToGoogleDrive() {
-    var baseUrl = 'https://script.google.com/macros/s/AKfycbzkKRhfEdwWBjkB682QIXkwKHWGNHsOWjbex0JrchS9zGTic_ZMlLP7GSeF2YxUx-6T/exec';
+    var baseUrl = 'https://script.google.com/macros/s/AKfycbzrk_eMw_O0yGRSb151DPpYxTdDGUryE6CbcAU8oiZj55xRHyNFUy8qyN6tgUSoGKzg/exec';
 
     if (!currentShift) { showToast('Please select AM or PM shift before saving.', 'error', 3500); return; }
     if (!poResult || !alkResult) { showToast('Calculate both sections first.', 'error', 3000); return; }
@@ -500,18 +500,23 @@
 
     var fullUrl = baseUrl + '?' + params.toString();
 
-    // Use Image ping — bypasses CORS entirely, works with Google Apps Script
-    var img = new Image();
-    img.onload = img.onerror = function() {
-      // Both onload and onerror fire after the request completes.
-      // Google Apps Script returns an HTML page (not an image),
-      // so onerror always fires — but the data IS saved successfully.
+    // Open in hidden window, auto-close immediately after load
+    var newTab = window.open(fullUrl, '_blank');
+
+    // Close the tab as soon as it opens (browser allows this since we opened it)
+    setTimeout(function() {
+      if (newTab) { try { newTab.close(); } catch(e) {} }
+    }, 500);
+
+    // Show success on button after 1s
+    setTimeout(function() {
       btn.textContent = '✓ Saved to Drive';
       btn.style.background  = 'linear-gradient(135deg, rgba(57,255,20,0.15), rgba(0,255,204,0.15))';
       btn.style.borderColor = 'rgba(57,255,20,0.5)';
       btn.style.color       = 'var(--accent-green)';
       showToast('✓ Shift saved to Google Drive!', 'success', 4500);
 
+      // Reset button after 8s
       setTimeout(function() {
         btn.textContent       = '☁ Save Shift';
         btn.style.background  = '';
@@ -519,8 +524,7 @@
         btn.style.color       = '';
         btn.disabled          = false;
       }, 8000);
-    };
-    img.src = fullUrl;
+    }, 1000);
   }
 
   function resetAll() {
@@ -538,6 +542,17 @@
   window.addEventListener('DOMContentLoaded', function() {
     try { captureEntryTime(); } catch(e) { console.error('captureEntryTime error:', e); }
     try { startLiveClock();   } catch(e) { console.error('startLiveClock error:', e); }
+
+    // Pre-fill test numbers
+    document.getElementById('po_start').value       = '6495871.0';
+    document.getElementById('po_end').value         = '6496473.0';
+    document.getElementById('po_water_sales').value = '420.00';
+    document.getElementById('po_oxy_sales').value   = '87.50';
+    document.getElementById('alk_start').value      = '293295.54';
+    document.getElementById('alk_end').value        = '293362.17';
+    document.getElementById('alk_sales').value      = '166.88';
+    selectShift('AM');
+    document.getElementById('employee_name').value  = 'Test User';
   });
 </script>
 </body>
